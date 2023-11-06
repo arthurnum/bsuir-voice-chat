@@ -1,48 +1,21 @@
 extern crate sdl2;
 
-use sdl2::audio::{AudioCallback, AudioSpecDesired};
+use sdl2::audio::AudioSpecDesired;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
-use std::ops::DerefMut;
+use std::ops::{DerefMut, Deref};
 use std::sync::mpsc;
+
+mod callbacks;
+
+use callbacks::{Recording, SoundPlayback};
 
 #[derive(PartialEq)]
 enum State {
     Idle,
     RecordStart,
     Replay,
-}
-
-struct Recording {
-    done_sender: mpsc::Sender<Vec<i16>>,
-}
-
-impl AudioCallback for Recording {
-    type Channel = i16;
-
-    fn callback(&mut self, input: &mut [i16]) {
-        println!("Input len = {:}", input.len());
-        self.done_sender
-            .send(Vec::from(input))
-            .expect("Could not send record buffer");
-    }
-}
-
-struct SoundPlayback {
-    data: Vec<i16>,
-    pos: usize,
-}
-
-impl AudioCallback for SoundPlayback {
-    type Channel = i16;
-
-    fn callback(&mut self, out: &mut [i16]) {
-        for dst in out.iter_mut() {
-            *dst = *self.data.get(self.pos).unwrap_or(&0);
-            self.pos += 1;
-        }
-    }
 }
 
 fn main() {
@@ -115,7 +88,9 @@ fn main() {
                     buffer.data.clear();
                     buffer.data.extend(record_buffer.clone());
                     buffer.pos = 0;
-                    state = State::Replay;
+                    if !buffer.is_empty() {
+                        state = State::Replay;
+                    }
                 },
                 _ => {}
             }
@@ -127,9 +102,20 @@ fn main() {
         }
 
         if state == State::Replay {
-            println!("RGOGOG");
-            state = State::Idle;
+            println!("Replay");
             playback_device.resume();
+
+            {
+                let replay_lock = playback_device.lock();
+                let buffer = replay_lock.deref();
+                if buffer.is_end_of_buffer() {
+                    state = State::Idle;
+                }
+            }
+
+            if state == State::Idle {
+                playback_device.pause();
+            }
         }
 
         window_canvas.clear();
