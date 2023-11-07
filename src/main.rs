@@ -95,6 +95,18 @@ fn main() {
                         state = State::ReplayStart;
                     }
                 },
+                Event::KeyDown { keycode: Some(Keycode::D), .. } => {
+                    let download = NetClient::get_record().unwrap();
+
+                    let mut replay_lock = playback_device.lock();
+                    let buffer = replay_lock.deref_mut();
+                    buffer.data.clear();
+                    buffer.data.extend(download);
+                    buffer.pos = 0;
+                    if !buffer.is_empty() {
+                        state = State::ReplayStart;
+                    }
+                },
                 _ => {}
             }
         }
