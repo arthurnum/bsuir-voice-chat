@@ -8,14 +8,17 @@ use std::ops::{DerefMut, Deref};
 use std::sync::mpsc;
 
 mod callbacks;
+mod net_client;
 
 use callbacks::{Recording, SoundPlayback};
+use net_client::NetClient;
 
 #[derive(PartialEq)]
 enum State {
     Idle,
     RecordStart,
-    Replay,
+    ReplayStart,
+    Replaying
 }
 
 fn main() {
@@ -89,7 +92,7 @@ fn main() {
                     buffer.data.extend(record_buffer.clone());
                     buffer.pos = 0;
                     if !buffer.is_empty() {
-                        state = State::Replay;
+                        state = State::ReplayStart;
                     }
                 },
                 _ => {}
@@ -101,10 +104,14 @@ fn main() {
             println!("Record len = {:}", record_buffer.len());
         }
 
-        if state == State::Replay {
+        if state == State::ReplayStart {
             println!("Replay");
             playback_device.resume();
+            state = State::Replaying;
+        }
 
+        if state == State::Replaying {
+            // scope the device lock guard
             {
                 let replay_lock = playback_device.lock();
                 let buffer = replay_lock.deref();
@@ -115,6 +122,7 @@ fn main() {
 
             if state == State::Idle {
                 playback_device.pause();
+                NetClient::post_record(&record_buffer);
             }
         }
 
