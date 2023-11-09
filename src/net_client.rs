@@ -1,5 +1,8 @@
-use std::io::{prelude::*, BufReader};
+use std::io::prelude::*;
 use std::net::TcpStream;
+
+use crate::command::Command;
+use crate::utils;
 
 
 pub struct NetClient {
@@ -15,19 +18,13 @@ impl NetClient {
             },
 
             Ok(mut connection) => {
-                let command: [u8; 8] = [102, 0, 0, 0, 0, 0, 0, 0];
+                let mut cmd = Command::get_record();
+                cmd.timestamp = 1699556937;
 
-                connection.write(&command).unwrap();
-                connection.flush().unwrap();
+                connection.write(bincode::serialize(&cmd).unwrap().as_slice()).unwrap();
 
                 let mut record_buf: Vec<u8> = Vec::new();
-                let mut l: usize = 0;
-                let mut read = true;
-
-                let mut reader = BufReader::new(connection);
-
-                reader.read_to_end(&mut record_buf).unwrap();
-
+                connection.read_to_end(&mut record_buf).unwrap();
                 println!("Done read. {:}", record_buf.len());
 
                 let x: u64 = bincode::deserialize(&record_buf).unwrap();
@@ -46,10 +43,13 @@ impl NetClient {
             Err(msg) => println!("{:}", msg),
 
             Ok(mut connection) => {
+                let mut cmd = Command::post_record();
                 let buf = bincode::serialize(data).unwrap();
-                let length = buf.len();
 
-                connection.write(bincode::serialize(&length).unwrap().as_slice()).unwrap();
+                cmd.data_len = buf.len() as u64;
+                cmd.timestamp = utils::get_timestamp();
+
+                connection.write(bincode::serialize(&cmd).unwrap().as_slice()).unwrap();
                 connection.write_all(&buf).unwrap();
                 connection.flush().unwrap();
             }

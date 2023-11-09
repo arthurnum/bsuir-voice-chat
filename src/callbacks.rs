@@ -9,7 +9,6 @@ impl AudioCallback for Recording {
     type Channel = i16;
 
     fn callback(&mut self, input: &mut [i16]) {
-        println!("Input len = {:}", input.len());
         self.done_sender
             .send(Vec::from(input))
             .expect("Could not send record buffer");
@@ -35,7 +34,6 @@ impl AudioCallback for SoundPlayback {
     type Channel = i16;
 
     fn callback(&mut self, out: &mut [i16]) {
-        println!("OUTPUT len = {:}", out.len());
         let buf_slice = self.data.as_slice();
         out.clone_from_slice(
             &buf_slice[(self.pos)..(self.pos + 1024)]

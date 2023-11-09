@@ -9,6 +9,8 @@ use std::sync::mpsc;
 
 mod callbacks;
 mod net_client;
+mod command;
+mod utils;
 
 use callbacks::{Recording, SoundPlayback};
 use net_client::NetClient;
@@ -83,6 +85,7 @@ fn main() {
                     if state == State::RecordStart {
                         state = State::Idle;
                         capture_device.pause();
+                        NetClient::post_record(&record_buffer);
                     }
                 },
                 Event::KeyDown { keycode: Some(Keycode::P), .. } => {
@@ -134,7 +137,6 @@ fn main() {
 
             if state == State::Idle {
                 playback_device.pause();
-                NetClient::post_record(&record_buffer);
             }
         }
 
