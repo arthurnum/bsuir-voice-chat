@@ -12,7 +12,7 @@ pub struct NetClient {
 
 impl NetClient {
     pub fn index() -> Option<Vec<VoiceListItem>> {
-        match TcpStream::connect("127.0.0.1:33666") {
+        match TcpStream::connect("0.0.0.0:33666") {
             Err(msg) => {
                 println!("{:}", msg);
                 None
@@ -33,8 +33,8 @@ impl NetClient {
         }
     }
 
-    pub fn get_record() -> Option<Vec<i16>> {
-        match TcpStream::connect("127.0.0.1:33666") {
+    pub fn get_record(id: u64) -> Option<Vec<i16>> {
+        match TcpStream::connect("0.0.0.0:33666") {
             Err(msg) => {
                 println!("{:}", msg);
                 None
@@ -42,7 +42,7 @@ impl NetClient {
 
             Ok(mut connection) => {
                 let mut cmd = Command::get_record();
-                cmd.timestamp = 1699556937;
+                cmd.timestamp = id;
 
                 connection.write(bincode::serialize(&cmd).unwrap().as_slice()).unwrap();
 
@@ -62,7 +62,7 @@ impl NetClient {
     }
 
     pub fn post_record(data: &Vec<i16>) {
-        match TcpStream::connect("127.0.0.1:33666") {
+        match TcpStream::connect("0.0.0.0:33666") {
             Err(msg) => println!("{:}", msg),
 
             Ok(mut connection) => {
