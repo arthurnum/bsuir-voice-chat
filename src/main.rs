@@ -11,6 +11,7 @@ mod callbacks;
 mod net_client;
 mod command;
 mod utils;
+mod voice_list_item;
 
 use callbacks::{Recording, SoundPlayback};
 use net_client::NetClient;
@@ -65,6 +66,9 @@ fn main() {
 
     let mut state = State::Idle;
     let mut record_buffer: Vec<i16> = Vec::new();
+    let mut records_list = NetClient::index().unwrap();
+
+    let mut list_update_timer = utils::get_timestamp();
 
     'running: loop {
         for event in event_pump.poll_iter() {
@@ -138,6 +142,13 @@ fn main() {
             if state == State::Idle {
                 playback_device.pause();
             }
+        }
+
+        // every 8 seconds update records list
+        let ts = utils::get_timestamp();
+        if ts - list_update_timer > 8 {
+            records_list = NetClient::index().unwrap();
+            list_update_timer = ts;
         }
 
         window_canvas.clear();

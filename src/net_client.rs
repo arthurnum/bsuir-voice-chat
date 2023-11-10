@@ -3,6 +3,7 @@ use std::net::TcpStream;
 
 use crate::command::Command;
 use crate::utils;
+use crate::voice_list_item::VoiceListItem;
 
 
 pub struct NetClient {
@@ -10,6 +11,28 @@ pub struct NetClient {
 }
 
 impl NetClient {
+    pub fn index() -> Option<Vec<VoiceListItem>> {
+        match TcpStream::connect("127.0.0.1:33666") {
+            Err(msg) => {
+                println!("{:}", msg);
+                None
+            },
+
+            Ok(mut connection) => {
+                let cmd = Command::index();
+
+                connection.write(bincode::serialize(&cmd).unwrap().as_slice()).unwrap();
+                connection.flush().unwrap();
+
+                let mut buf: Vec<u8> = Vec::new();
+                connection.read_to_end(&mut buf).unwrap();
+
+                let records_list: Vec<VoiceListItem> = bincode::deserialize(&buf).unwrap();
+                Some(records_list)
+            }
+        }
+    }
+
     pub fn get_record() -> Option<Vec<i16>> {
         match TcpStream::connect("127.0.0.1:33666") {
             Err(msg) => {
@@ -33,7 +56,7 @@ impl NetClient {
                 let su = bincode::deserialize::<Vec<i16>>(&record_buf).unwrap();
                 println!("Result len {:}", su.len());
 
-                return Some(su);
+                Some(su)
             }
         }
     }
