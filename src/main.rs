@@ -200,10 +200,28 @@ fn main() {
             }
         }
 
-        // every 8 seconds update records list
+        // every 7 seconds update records list
         let ts = utils::get_timestamp();
-        if ts - list_update_timer > 8 {
-            records_list = NetClient::index().unwrap();
+        if ts - list_update_timer > 7 {
+            let server_list = NetClient::index().unwrap();
+            if server_list.len() > records_list_ui.len() {
+                println!("New items");
+                let mut last_y_offset = records_list_ui.last().unwrap().rect.y + records_list_ui.last().unwrap().rect.h;
+                for record in &server_list[records_list_ui.len()..] {
+                    let item_surface = text_render.surface_from_timestamp(record.timestamp);
+                    let item_texture = texturer.create_texture_from_surface(&item_surface).unwrap();
+                    let mut item_rect = item_surface.rect();
+                    item_rect.y = last_y_offset;
+                    records_list_ui.push(
+                        VoiceListItemUI {
+                            timestamp: record.timestamp,
+                            rect: item_rect,
+                            texture: item_texture
+                        }
+                    );
+                    last_y_offset += item_rect.h;
+                }
+            }
             list_update_timer = ts;
         }
 
