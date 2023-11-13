@@ -5,6 +5,7 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
+use sdl2::rect::Rect;
 use std::ops::{DerefMut, Deref};
 use std::sync::mpsc;
 
@@ -69,18 +70,21 @@ fn main() {
     let ttf_context = sdl2::ttf::init().unwrap();
     let font = ttf_context.load_font("OpenSans-Light.ttf", 16).unwrap();
     let text_render = TextRender { font };
+
+    let label_r_surface = text_render.font.render("R").solid(Color::RGB(240, 25, 45)).unwrap();
+    let label_r_texutre = texturer.create_texture_from_surface(&label_r_surface).unwrap();
     // --------
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
     let mut state = State::Idle;
     let mut record_buffer: Vec<i16> = Vec::new();
-    let mut records_list = NetClient::index().unwrap();
+    let records_list = NetClient::index().unwrap();
     let mut records_list_ui: Vec<VoiceListItemUI> = Vec::new();
 
     let mut list_y_offset = 0;
     for record in records_list.iter() {
-        let item_surface = text_render.surface_from_timestamp(record.timestamp);
+        let item_surface = text_render.surface_from_timestamp(record.timestamp, 10, 10, 20);
         let item_texture = texturer.create_texture_from_surface(&item_surface).unwrap();
         let mut item_rect = item_surface.rect();
         item_rect.y = list_y_offset;
@@ -129,18 +133,6 @@ fn main() {
                     if !buffer.is_empty() {
                         state = State::ReplayStart;
                     }
-                },
-                Event::KeyDown { keycode: Some(Keycode::D), .. } => {
-                    // let download = NetClient::get_record().unwrap();
-
-                    // let mut replay_lock = playback_device.lock();
-                    // let buffer = replay_lock.deref_mut();
-                    // buffer.data.clear();
-                    // buffer.data.extend(download);
-                    // buffer.pos = 0;
-                    // if !buffer.is_empty() {
-                    //     state = State::ReplayStart;
-                    // }
                 },
                 Event::MouseWheel { y, .. } => {
                     let dy = y * 4;
@@ -208,7 +200,7 @@ fn main() {
                 println!("New items");
                 let mut last_y_offset = records_list_ui.last().unwrap().rect.y + records_list_ui.last().unwrap().rect.h;
                 for record in &server_list[records_list_ui.len()..] {
-                    let item_surface = text_render.surface_from_timestamp(record.timestamp);
+                    let item_surface = text_render.surface_from_timestamp(record.timestamp, 10, 10, 20);
                     let item_texture = texturer.create_texture_from_surface(&item_surface).unwrap();
                     let mut item_rect = item_surface.rect();
                     item_rect.y = last_y_offset;
@@ -225,10 +217,20 @@ fn main() {
             list_update_timer = ts;
         }
 
+        window_canvas.set_draw_color(Color::RGB(250, 250, 245));
         window_canvas.clear();
         for record_ui in records_list_ui.iter() {
             window_canvas.copy(&record_ui.texture, None, record_ui.rect).unwrap();
         }
+
+        window_canvas.set_draw_color(Color::RGB(240, 25, 45));
+        window_canvas.draw_rect(Rect::new(345, 20, 32, 32)).unwrap();
+        if state == State::RecordStart {
+            window_canvas.fill_rect(Rect::new(354, 29, 14, 14)).unwrap();
+        } else {
+            window_canvas.copy(&label_r_texutre, None, Rect::new(350, 25, 22, 22)).unwrap();
+        }
+
         window_canvas.present();
 
     }

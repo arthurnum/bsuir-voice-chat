@@ -10,7 +10,6 @@ pub struct Command {
     pub data_len: u64,
     pub timestamp: u64,
 }
-pub const COMMAND_BIN_SIZE: usize = 1 + 8 + 8;
 
 impl Command {
     pub fn index() -> Command {

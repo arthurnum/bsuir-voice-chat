@@ -5,6 +5,7 @@ use crate::command::Command;
 use crate::utils;
 use crate::voice_list_item::VoiceListItem;
 
+const SERVER_ADDR: &str = "127.0.0.1:33666";
 
 pub struct NetClient {
     pub connection: Option<TcpStream>
@@ -12,7 +13,7 @@ pub struct NetClient {
 
 impl NetClient {
     pub fn index() -> Option<Vec<VoiceListItem>> {
-        match TcpStream::connect("0.0.0.0:33666") {
+        match TcpStream::connect(SERVER_ADDR) {
             Err(msg) => {
                 println!("{:}", msg);
                 None
@@ -34,7 +35,7 @@ impl NetClient {
     }
 
     pub fn get_record(id: u64) -> Option<Vec<i16>> {
-        match TcpStream::connect("0.0.0.0:33666") {
+        match TcpStream::connect(SERVER_ADDR) {
             Err(msg) => {
                 println!("{:}", msg);
                 None
@@ -62,7 +63,7 @@ impl NetClient {
     }
 
     pub fn post_record(data: &Vec<i16>) {
-        match TcpStream::connect("0.0.0.0:33666") {
+        match TcpStream::connect(SERVER_ADDR) {
             Err(msg) => println!("{:}", msg),
 
             Ok(mut connection) => {
