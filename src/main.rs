@@ -2,7 +2,7 @@ extern crate sdl2;
 
 use sdl2::audio::AudioSpecDesired;
 use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
+use sdl2::keyboard::{Keycode, Scancode};
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
@@ -106,10 +106,8 @@ fn main() {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }
-                | Event::KeyDown {
-                    keycode: Some(Keycode::Escape),
-                    ..
-                } => break 'running,
+                | Event::KeyDown { keycode: Some(Keycode::Escape), .. }
+                | Event::KeyDown { scancode: Some(Scancode::Q), .. } => break 'running,
                 Event::KeyDown { keycode: Some(Keycode::R), .. } => {
                     if state == State::Idle {
                         state = State::RecordStart;
