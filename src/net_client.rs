@@ -1,19 +1,31 @@
-use std::io::prelude::*;
+use std::fs::File;
+use std::io::{prelude::*, BufReader};
 use std::net::TcpStream;
 
 use crate::command::Command;
 use crate::utils;
 use crate::voice_list_item::VoiceListItem;
 
-const SERVER_ADDR: &str = "127.0.0.1:33666";
 
+#[derive(Debug)]
 pub struct NetClient {
-    pub connection: Option<TcpStream>
+    pub server_id: String,
 }
 
 impl NetClient {
-    pub fn index() -> Option<Vec<VoiceListItem>> {
-        match TcpStream::connect(SERVER_ADDR) {
+    pub fn new() -> NetClient {
+        let mut config = BufReader::new(
+            File::open("config").unwrap()
+        );
+        let mut ip_str = String::new();
+        config.read_line(&mut ip_str).unwrap();
+        ip_str = format!("{:}:33666", ip_str.trim());
+
+        NetClient { server_id: ip_str }
+    }
+
+    pub fn index(&self) -> Option<Vec<VoiceListItem>> {
+        match TcpStream::connect(&self.server_id) {
             Err(msg) => {
                 println!("{:}", msg);
                 None
@@ -34,8 +46,8 @@ impl NetClient {
         }
     }
 
-    pub fn get_record(id: u64) -> Option<Vec<i16>> {
-        match TcpStream::connect(SERVER_ADDR) {
+    pub fn get_record(&self, id: u64) -> Option<Vec<i16>> {
+        match TcpStream::connect(&self.server_id) {
             Err(msg) => {
                 println!("{:}", msg);
                 None
@@ -62,8 +74,8 @@ impl NetClient {
         }
     }
 
-    pub fn post_record(data: &Vec<i16>) {
-        match TcpStream::connect(SERVER_ADDR) {
+    pub fn post_record(&self, data: &Vec<i16>) {
+        match TcpStream::connect(&self.server_id) {
             Err(msg) => println!("{:}", msg),
 
             Ok(mut connection) => {

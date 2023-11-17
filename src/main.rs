@@ -33,6 +33,7 @@ enum State {
 const ITEMS_PADDING: i32 = 6;
 
 fn main() {
+    let net_api = NetClient::new();
     let sdl_context = sdl2::init().unwrap();
     let sdl_video = sdl_context.video().unwrap();
     let audio_subsystem = sdl_context.audio().unwrap();
@@ -81,7 +82,7 @@ fn main() {
 
     let mut state = State::Idle;
     let mut record_buffer: Vec<i16> = Vec::new();
-    let records_list = NetClient::index().unwrap();
+    let records_list = net_api.index().unwrap();
     let mut records_list_ui: Vec<VoiceListItemUI> = Vec::new();
 
     let mut list_y_offset = 0;
@@ -121,7 +122,8 @@ fn main() {
                     if state == State::RecordStart {
                         state = State::Idle;
                         capture_device.pause();
-                        NetClient::post_record(&record_buffer);
+                        println!("Record len = {:}", record_buffer.len());
+                        net_api.post_record(&record_buffer);
                     }
                 },
                 Event::KeyDown { keycode: Some(Keycode::P), .. } => {
@@ -150,7 +152,7 @@ fn main() {
                     if record.is_some() {
                         let ts = record.unwrap().timestamp;
                         println!("{ts:}");
-                        let download = NetClient::get_record(ts).unwrap();
+                        let download = net_api.get_record(ts).unwrap();
 
                         let mut replay_lock = playback_device.lock();
                         let buffer = replay_lock.deref_mut();
@@ -168,7 +170,6 @@ fn main() {
 
         if state == State::RecordStart {
             record_buffer.extend(done_receiver.recv().unwrap());
-            println!("Record len = {:}", record_buffer.len());
         }
 
         if state == State::ReplayStart {
@@ -192,10 +193,10 @@ fn main() {
             }
         }
 
-        // every 7 seconds update records list
+        // every 6 seconds update records list
         let ts = utils::get_timestamp();
-        if ts - list_update_timer > 7 {
-            let server_list = NetClient::index().unwrap();
+        if ts - list_update_timer > 6 {
+            let server_list = net_api.index().unwrap();
             if server_list.len() > records_list_ui.len() {
                 println!("New items");
                 let mut last_y_offset = records_list_ui.last().unwrap().rect.y + records_list_ui.last().unwrap().rect.h;
