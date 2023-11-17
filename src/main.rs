@@ -30,6 +30,8 @@ enum State {
     Replaying
 }
 
+const ITEMS_PADDING: i32 = 6;
+
 fn main() {
     let sdl_context = sdl2::init().unwrap();
     let sdl_video = sdl_context.video().unwrap();
@@ -55,7 +57,7 @@ fn main() {
     }).unwrap();
 
     let window = sdl_video
-        .window("Eremeev: Voice Chat", 400, 200)
+        .window("Eremeev: Voice Chat", 400, 400)
         .position_centered()
         .build()
         .unwrap();
@@ -95,7 +97,7 @@ fn main() {
                 texture: item_texture
             }
         );
-        list_y_offset += item_rect.h;
+        list_y_offset += item_rect.h + ITEMS_PADDING;
     }
 
     window_canvas.set_draw_color(Color::RGB(250, 250, 245));
@@ -201,7 +203,7 @@ fn main() {
                     let item_surface = text_render.surface_from_timestamp(record.timestamp, 10, 10, 20);
                     let item_texture = texturer.create_texture_from_surface(&item_surface).unwrap();
                     let mut item_rect = item_surface.rect();
-                    item_rect.y = last_y_offset;
+                    item_rect.y = last_y_offset + ITEMS_PADDING;
                     records_list_ui.push(
                         VoiceListItemUI {
                             timestamp: record.timestamp,
