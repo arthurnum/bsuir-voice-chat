@@ -199,7 +199,12 @@ fn main() {
             let server_list = net_api.index().unwrap();
             if server_list.len() > records_list_ui.len() {
                 println!("New items");
-                let mut last_y_offset = records_list_ui.last().unwrap().rect.y + records_list_ui.last().unwrap().rect.h;
+
+                let mut last_y_offset: i32 = 0;
+                if records_list_ui.len() > 0 {
+                    last_y_offset = records_list_ui.last().unwrap().rect.y + records_list_ui.last().unwrap().rect.h;
+                }
+
                 for record in &server_list[records_list_ui.len()..] {
                     let item_surface = text_render.surface_from_timestamp(record.timestamp, 10, 10, 20);
                     let item_texture = texturer.create_texture_from_surface(&item_surface).unwrap();
